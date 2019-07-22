@@ -7,7 +7,7 @@ from config import Config
 
 # Flask-SQLAlchemy plugin
 db = SQLAlchemy()
-# Flask-Migrate plugin
+# # Flask-Migrate plugin
 migrate = Migrate()
 
 
