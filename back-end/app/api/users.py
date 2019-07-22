@@ -46,10 +46,44 @@ def get_user(id):
     return jsonify(User.query.get_or_404(id).to_dict())
 
 
+@bp.route('/users/', methods=['GET'])
+def get_users():
+    '''返回用户集合，分页'''
+    page = request.args.get('page', 1, type=int)
+    per_page = min(request.args.get('per_page', 10, type=int), 100)
+    data = User.to_collection_dict(User.query, page, per_page, 'api.get_users')
+    return jsonify(data)
+
+
 @bp.route('/users/<int:id>', methods=['PUT'])
 def update_user(id):
     '''修改一个用户'''
-    pass
+    user = User.query.get_or_404(id)
+    data = request.get_json()
+    if not data:
+        return bad_request('You must post JSON data.')
+
+    message = {}
+    if 'username' in data and not data.get('username', None):
+        message['username'] = 'Please provide a valid username.'
+
+    pattern = '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+    if 'email' in data and not re.match(pattern, data.get('email', None)):
+        message['email'] = 'Please provide a valid email address.'
+
+    if 'username' in data and data['username'] != user.username and \
+            User.query.filter_by(username=data['username']).first():
+        message['username'] = 'Please use a different username.'
+    if 'email' in data and data['email'] != user.email and \
+            User.query.filter_by(email=data['email']).first():
+        message['email'] = 'Please use a different email address.'
+
+    if message:
+        return bad_request(message)
+
+    user.from_dict(data, new_user=False)
+    db.session.commit()
+    return jsonify(user.to_dict())
 
 
 @bp.route('/users/<int:id>', methods=['DELETE'])
