@@ -16,40 +16,24 @@ def get_config_values(section, option):
 
 
 class SQLTool:
-    def __init__(self, is_master):
-        if is_master:
-            self.client = connect(
-                host=get_config_values("sql_master", "host"),
-                port=get_config_values("sql_master", "port"),
-                user=get_config_values("sql_master", "user"),
-                password=get_config_values("sql_master", "password"),
-                database=get_config_values("sql_master", "database")
-            )
-            self.cursor = self.client.cursor()
-        else:
-            self.client = connect(
-                host=get_config_values("sql_slave", "host"),
-                port=get_config_values("sql_slave", "port"),
-                user=get_config_values("sql_slave", "user"),
-                password=get_config_values("sql_slave", "password"),
-                database=get_config_values("sql_slave", "database")
-            )
-            self.cursor = self.client.cursor()
+    def __init__(self, is_master=True):
+        self.client = connect(host="192.168.45.160", port=3306, user="root", password="casper", database="madblog")
+        self.cursor = self.client.cursor()
 
     def query(self, sql, size="all"):
+        print(sql)
         self.cursor.execute(sql)
         if size == "all":
             return self.cursor.fetchall()
-        return self.cursor.fetchmany()
+        return self.cursor.fetchone()
 
     def insert(self, sql):
+        print(sql)
         try:
             self.cursor.execute(sql)
             self.cursor.commit()
         except Exception as e:
             self.client.rollback()
 
-    def __del__(self):
-        self.cursor.close()
 
-
+SQL = SQLTool()

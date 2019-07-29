@@ -4,7 +4,6 @@ from app import db
 from app.api import bp
 from app.api.auth import token_auth
 from app.api.errors import bad_request
-from app.api.utils import SQLTool
 from app.models import User
 
 
@@ -23,24 +22,23 @@ def create_user():
         message['email'] = 'Please provide a valid email address.'
     if 'password' not in data or not data.get('password', None):
         message['password'] = 'Please provide a valid password.'
-    connection = SQLTool(is_master=False)
-    if connection.query("SELECT username FROM users WHERE username="+data.get("username")):
+
+    if User.query.filter_by(username=data.get('username', None)).first():
         message['username'] = 'Please use a different username.'
-    if connection.query("SELECT email FROM users WHERE email="+data.get("email")):
+    if User.query.filter_by(email=data.get('email', None)).first():
         message['email'] = 'Please use a different email address.'
     if message:
         return bad_request(message)
-    connection.insert("INSERT INTO users (username, email ) VALUES(" + data.get("username") + data.get("email")+ ")")
 
-    # user = User()
-    # user.from_dict(data, new_user=True)
-    # db.session.add(user)
-    # db.session.commit()
-    # response = jsonify(user.to_dict())
-    # response.status_code = 201
-    # # HTTP协议要求201响应包含一个值为新资源URL的Location头部
-    # response.headers['Location'] = url_for('api.get_user', id=user.id)
-    return "good"
+    user = User()
+    user.from_dict(data, new_user=True)
+    db.session.add(user)
+    db.session.commit()
+    response = jsonify(user.to_dict())
+    response.status_code = 201
+    # HTTP协议要求201响应包含一个值为新资源URL的Location头部
+    response.headers['Location'] = url_for('api.get_user', id=user.id)
+    return response
 
 
 @bp.route('/users', methods=['GET'])
