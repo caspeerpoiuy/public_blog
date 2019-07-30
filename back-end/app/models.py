@@ -96,7 +96,7 @@ class User(PaginatedAPIMixin, db.Model):
                 'self': url_for('api.get_user', id=self.id),
                 'avatar': self.avatar(128),
                 'followeds': url_for('api.get_followeds', id=self.id),
-                'followers': url_for('api.get_followers', id=self.id)
+                'followers': url_for('api.get_followers', id=self.id) 
             }
         }
         if include_email:
